@@ -1,0 +1,20 @@
+version: '3.7'
+
+services:
+  livy:
+    image: custom-livy:0.7.0_spark-2.4.5_hadoop-2.7-scala-2.11
+    hostname: livy.dev
+    container_name: livy.dev
+    networks:
+      - local-dev
+    ports:
+      - "8000:8000"
+    user: livy
+    command: /opt/app/livy/bin/livy-server
+
+networks:
+  local-dev:
+    name: local-dev
+    ipam:
+      config:
+        - subnet: 192.168.100.0/24

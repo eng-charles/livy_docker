@@ -1,0 +1,39 @@
+FROM openjdk:8u232-jdk-slim
+
+# application version.
+ENV LIVY_VERSION=0.7.0
+ENV SPARK_VERSION=3.0.0
+ENV HADOOP_VERSION=3.2.1
+ENV SCALA_VERSION=2.12
+
+# livy env.
+ENV LIVY_HOME=/opt/app/livy
+ENV LIVY_CONF_DIR=/opt/conf/livy
+
+# add scripts.
+ADD ./opt /opt
+
+# install apt pkg.
+RUN  cp /opt/conf/apt/sources.list /etc/apt/sources.list \
+ && mv /etc/localtime /etc/localtime.backup \
+ && ln -s /usr/share/zoneinfo/Asia/Seoul /etc/localtime \
+ && apt-get update \
+ && apt-get install -y --no-install-recommends \
+ wget unzip procps \
+ && rm -rf /var/lib/apt/lists/*
+
+# download and install application
+RUN /opt/bin/download_livy.sh \
+ && /opt/bin/download_spark3.sh \
+ && /opt/bin/download_hadoop.sh \
+ && /opt/bin/mkdir.sh \
+ && echo "livy.spark.scala-version = ${SCALA_VERSION}" >> /opt/conf/livy/livy.conf \
+ && useradd -M -d /opt -s /bin/bash livy \
+ && chown -R livy:livy /opt
+
+WORKDIR /opt
+USER livy
+
+EXPOSE 8000
+
+ENTRYPOINT ["/opt/bin/entrypoint.sh"]
